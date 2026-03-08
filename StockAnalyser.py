@@ -463,17 +463,28 @@ def main():
         layout="centered",
     )
 
+    # 隐藏 Streamlit 系统元素
+    hide_streamlit_style = """
+            <style>
+            /* 隐藏右上角菜单 */
+            #MainMenu {visibility: hidden;}
+            /* 隐藏顶部装饰条 */
+            header {visibility: hidden;}
+            /* 隐藏底部页脚 */
+            footer {visibility: hidden;}
+            /* 隐藏 'Made with Streamlit' */
+            .stDeployButton {display:none;}
+            /* 隐藏 Streamlit 标志 */
+            .stAppViewBlockContainer {padding-top: 2rem;}
+            </style>
+            """
+    st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
     st.title("我的 AI 股票分析站")
     st.markdown("一个极简的 30 天趋势分析小工具，结合多指标与新闻情绪给出综合建议。")
 
     # 🔐 用户认证系统
     st.sidebar.title("🔐 用户中心")
-    
-    # 调试模式开关
-    if 'debug_mode' not in st.session_state:
-        st.session_state.debug_mode = False
-    debug_mode = st.sidebar.checkbox("🔧 调试模式", value=st.session_state.debug_mode)
-    st.session_state.debug_mode = debug_mode
     
     # 检查认证状态
     if not check_authentication():
@@ -567,12 +578,21 @@ def main():
             # 如果用户已登录，同步到云端
             if username:
                 stock_list_str = ",".join(unique_codes)
-                with st.spinner("正在同步持仓到云端..."):
-                    sync_result = sync_portfolio_to_cloud(username, stock_list_str)
-                    if sync_result:
-                        st.success("✅ 持仓已同步到云端")
-                    else:
-                        st.error("❌ 云端同步失败，但本地分析仍可继续")
+                
+                # 检查数据是否真的发生了变化
+                current_portfolio = get_user_portfolio(username)
+                current_stocks = ""
+                if current_portfolio and current_portfolio.get('stock_list'):
+                    current_stocks = current_portfolio['stock_list']
+                
+                # 只有当数据真正变化时才同步并显示提示
+                if current_stocks != stock_list_str:
+                    with st.spinner("正在同步持仓到云端..."):
+                        sync_result = sync_portfolio_to_cloud(username, stock_list_str)
+                        if sync_result:
+                            st.success("✅ 持仓已同步到云端")
+                        else:
+                            st.error("❌ 云端同步失败，但本地分析仍可继续")
 
             spinner_text = (
                 "正在对您的持仓进行短线诊断（5 日 15 分钟数据）..."

@@ -273,13 +273,8 @@ def get_current_user():
 def show_user_info():
     """显示用户信息"""
     username, user_info = get_current_user()
-    if username and user_info:
-        created_at = user_info.get('created_at', '未知')
-        last_login = user_info.get('last_login', '从未登录')
-        
+    if username:
         st.sidebar.markdown(f"**当前用户：** {username}")
-        st.sidebar.markdown(f"**注册时间：** {created_at[:10] if created_at != '未知' else '未知'}")
-        st.sidebar.markdown(f"**最后登录：** {last_login[:19] if last_login and last_login != '从未登录' else '从未登录'}")
         
         if st.sidebar.button("🚪 退出登录"):
             logout_user()

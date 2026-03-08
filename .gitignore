@@ -50,3 +50,4 @@ test_*.py
 *.temp
 check_table.py
 setup_auth.py
+check_ui_optimizations.py
